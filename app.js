@@ -220,9 +220,13 @@ function reset(){
   seen.clear(); pos = 0; render();
 }
 
-/* Jump to the quiz for the lesson currently being studied. */
+/* Jump to the quiz for the lesson currently being studied.
+   Read the key straight off the selector so it always reflects the
+   on-screen lesson, and use an explicit index.html path so the query
+   string survives on every host (including file://). */
 function goToQuiz(){
-  window.location.href = `quiz/?lesson=${encodeURIComponent(lessonKey)}`;
+  const key = $("lessonSelect").value || lessonKey;
+  window.location.href = `quiz/index.html?lesson=${encodeURIComponent(key)}`;
 }
 
 /* ---------- lesson switching ------------------------------- */
