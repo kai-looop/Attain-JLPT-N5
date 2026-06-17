@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N5 Lesson 1 — Flash Cards</title>
+<!-- Noto Sans JP — the Gothic typeface that matches JLPT exam booklets -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ai:#1b2a4a;--ai-deep:#0f1c33;--washi:#f7f3e9;--washi-edge:#ece4d2;
+    --shu:#c8442e;--shu-soft:#e8b9ad;--sumi:#23211c;--muted:#6f6a5e;
+    --gold:#b08d3f;--line:#d8cfba;
+    /* JLPT-style Japanese Gothic stack (falls back to system Gothic offline) */
+    --jp:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
+    background:
+      radial-gradient(circle at 20% 0%, #233458 0%, transparent 55%),
+      radial-gradient(circle at 90% 100%, #16243f 0%, transparent 50%),
+      var(--ai-deep);
+    color:var(--washi);min-height:100%;
+    display:flex;flex-direction:column;align-items:center;padding:24px 16px 40px;
+  }
+  header{text-align:center;margin-bottom:18px;max-width:620px}
+  .eyebrow{font-family:"Helvetica Neue",Arial,sans-serif;letter-spacing:.42em;
+    text-transform:uppercase;font-size:11px;color:var(--shu-soft);margin-bottom:10px;padding-left:.42em}
+  h1{font-size:clamp(28px,7vw,44px);font-weight:600;line-height:1.1;letter-spacing:.04em}
+  h1 .sub{display:block;font-family:var(--jp);font-size:13px;
+    letter-spacing:.06em;color:var(--muted);margin-top:8px;font-weight:400;text-transform:none}
+
+  /* lesson selector */
+  .lesson-pick{display:flex;align-items:center;gap:10px;margin-top:18px;
+    font-family:"Helvetica Neue",Arial,sans-serif}
+  .lesson-pick label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--shu-soft)}
+  .lesson-pick select{
+    font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;letter-spacing:.04em;
+    background:rgba(255,255,255,.08);color:var(--washi);
+    border:1px solid rgba(255,255,255,.2);border-radius:24px;
+    padding:9px 36px 9px 16px;cursor:pointer;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23b08d3f' stroke-width='1.6' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;max-width:340px}
+  .lesson-pick select:hover{border-color:var(--shu-soft)}
+  .lesson-pick select option{background:var(--ai-deep);color:var(--washi)}
+
+  /* direction switch */
+  .mode{display:flex;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);
+    border-radius:30px;padding:5px;margin-top:16px;font-family:"Helvetica Neue",Arial,sans-serif}
+  .mode button{border:none;background:transparent;color:var(--washi);cursor:pointer;
+    padding:9px 18px;border-radius:24px;font-size:12px;letter-spacing:.1em;transition:all .2s ease}
+  .mode button.on{background:var(--shu);color:#fff;font-weight:600}
+
+  .meter{display:flex;align-items:center;gap:12px;margin:18px 0 8px;width:100%;max-width:480px;
+    font-family:"Helvetica Neue",Arial,sans-serif}
+  .meter .count{font-size:12px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
+  .track{flex:1;height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--shu),var(--gold));transition:width .35s ease}
+
+  .stage{perspective:1400px;width:100%;max-width:480px;margin-top:14px}
+  .card{position:relative;width:100%;aspect-ratio:3/2;transform-style:preserve-3d;
+    transition:transform .55s cubic-bezier(.2,.7,.2,1);cursor:pointer}
+  .card.flipped{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;background:var(--washi);font-family:var(--jp);
+    border-radius:14px;border:1px solid var(--washi-edge);
+    box-shadow:0 20px 45px -18px rgba(0,0,0,.7), inset 0 0 0 6px var(--washi), inset 0 0 0 7px var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--sumi);padding:24px;text-align:center}
+  .corner{position:absolute;top:14px;font-family:var(--jp);
+    font-size:11px;letter-spacing:.18em;color:var(--gold)}
+  .corner.l{left:18px}
+  .corner.r{right:18px;color:var(--shu)}
+  .big{font-size:clamp(40px,11vw,64px);font-weight:600;line-height:1.05;letter-spacing:.03em}
+  .big.jp{font-size:clamp(46px,13vw,72px)}
+  .sub2{font-size:clamp(20px,5vw,28px);color:var(--muted);margin-top:14px;letter-spacing:.08em}
+  .sub2.empty{font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;letter-spacing:.1em;color:#b9b1a0}
+  .romaji{font-family:"Helvetica Neue",Arial,sans-serif;font-size:clamp(16px,4.5vw,22px);
+    letter-spacing:.06em;color:var(--ai);font-style:italic}
+  .pos{margin-top:14px;font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+
+  /* kanji breakdown */
+  .breakdown{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;max-width:100%}
+  .kb{display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:rgba(176,141,63,.1);border:1px solid var(--line);border-radius:8px;
+    padding:6px 10px;min-width:54px}
+  .kb-char{font-family:var(--jp);font-size:24px;line-height:1;color:var(--ai)}
+  .kb-gloss{font-family:"Helvetica Neue",Arial,sans-serif;font-size:9.5px;letter-spacing:.02em;
+    text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;max-width:84px}
+
+  .back{transform:rotateY(180deg)}
+  .flip-hint{position:absolute;bottom:14px;font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#b9b1a0}
+
+  .controls{display:flex;align-items:center;gap:10px;margin-top:26px}
+  button{font-family:"Helvetica Neue",Arial,sans-serif;border:none;cursor:pointer;
+    border-radius:9px;transition:transform .12s ease, background .2s ease, color .2s ease}
+  button:active{transform:translateY(1px)}
+  .nav{width:52px;height:52px;font-size:20px;background:rgba(255,255,255,.08);
+    color:var(--washi);border:1px solid rgba(255,255,255,.14)}
+  .nav:hover{background:rgba(255,255,255,.16)}
+  .flip-btn{height:52px;padding:0 28px;font-size:14px;letter-spacing:.12em;text-transform:uppercase;
+    background:var(--shu);color:#fff;font-weight:600}
+  .flip-btn:hover{background:#d44e37}
+  .toolbar{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;justify-content:center}
+  .chip{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;letter-spacing:.08em;
+    padding:9px 16px;background:transparent;color:var(--washi);
+    border:1px solid rgba(255,255,255,.2);border-radius:30px}
+  .chip:hover{border-color:var(--shu-soft);color:var(--shu-soft)}
+  .chip.on{background:var(--shu);border-color:var(--shu);color:#fff}
+  footer{margin-top:30px;font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;
+    color:var(--muted);letter-spacing:.06em;text-align:center}
+  kbd{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);
+    border-radius:4px;padding:1px 6px;font-size:10px}
+  @media (max-width:420px){.nav{width:46px;height:46px}.flip-btn{padding:0 18px}}
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">JLPT N5 · Vocabulary</div>
+    <h1><span id="lessonNo">Lesson 1</span><span class="sub" id="lessonSub"></span></h1>
+    <div class="lesson-pick">
+      <label for="lessonSelect">Lesson</label>
+      <select id="lessonSelect" aria-label="Choose a lesson"></select>
+    </div>
+  </header>
+
+  <div class="mode">
+    <button id="m-jp" class="on" onclick="setDir(false)">Japanese → English</button>
+    <button id="m-en" onclick="setDir(true)">English → Japanese</button>
+  </div>
+
+  <div class="meter">
+    <span class="count" id="count">01 / 40</span>
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <span class="count" id="seen">0 seen</span>
+  </div>
+
+  <div class="stage">
+    <div class="card" id="card" onclick="flip()">
+      <div class="face front">
+        <span class="corner l" id="idx">01</span>
+        <span class="corner r" id="frontTag">日本語</span>
+        <div class="big" id="fBig"></div>
+        <div class="sub2" id="fSub"></div>
+        <span class="flip-hint">tap to reveal</span>
+      </div>
+      <div class="face back">
+        <span class="corner l" id="idx2">01</span>
+        <span class="corner r" id="backTag">English</span>
+        <div class="romaji" id="bRomaji"></div>
+        <div class="big" id="bBig"></div>
+        <div class="breakdown" id="breakdown"></div>
+        <div class="pos" id="bPos"></div>
+        <span class="flip-hint">tap to flip back</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="nav" onclick="go(-1)" aria-label="Previous">&lsaquo;</button>
+    <button class="flip-btn" onclick="flip()">Flip</button>
+    <button class="nav" onclick="go(1)" aria-label="Next">&rsaquo;</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="chip" id="shuffleBtn" onclick="toggleShuffle()">&#10862; Shuffle</button>
+    <button class="chip" onclick="reset()">&#8635; Restart</button>
+  </div>
+
+  <footer><kbd>&larr;</kbd> <kbd>&rarr;</kbd> navigate &middot; <kbd>space</kbd> flip &middot; <span id="wordCount">40 words</span></footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

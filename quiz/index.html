@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>N5 Vocabulary Quiz</title>
+  <!-- Noto Sans JP — the Gothic typeface that matches JLPT exam booklets -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1226;
+      --card: #1b1f3b;
+      --card-2: #232850;
+      --accent: #6c8cff;
+      --accent-2: #8a6cff;
+      --good: #3ddc97;
+      --bad: #ff6b6b;
+      --text: #eef0ff;
+      --muted: #9aa0c7;
+      --track: #2c3160;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #2a2f5e, var(--bg));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+      padding: 28px;
+    }
+    .hidden { display: none; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .lesson { color: var(--muted); font-size: 15px; margin-bottom: 22px; }
+
+    .field-label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    #lesson-select {
+      width: 100%;
+      font-size: 16px;
+      color: var(--text);
+      background: var(--card-2);
+      border: 2px solid var(--track);
+      border-radius: 12px;
+      padding: 13px 14px;
+      margin-bottom: 22px;
+      cursor: pointer;
+    }
+    #lesson-select:focus { outline: none; border-color: var(--accent); }
+    #lesson-select option { background: var(--card); color: var(--text); }
+    p.intro { color: var(--muted); line-height: 1.6; }
+
+    .btn {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      padding: 14px 22px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      transition: transform .08s ease, opacity .2s;
+    }
+    .btn:hover { opacity: .92; }
+    .btn:active { transform: translateY(1px); }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .progress { height: 8px; background: var(--track); border-radius: 99px; overflow: hidden; margin-bottom: 22px; }
+    .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .3s ease; }
+
+    .prompt { font-size: 40px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; word-break: break-word; }
+    .sub-prompt { color: var(--muted); font-size: 16px; min-height: 22px; margin-bottom: 20px; }
+
+    .options { display: grid; gap: 12px; }
+    .option {
+      text-align: left;
+      font-size: 16px;
+      color: var(--text);
+      background: var(--card-2);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s, transform .06s;
+    }
+    .option:hover:not(:disabled) { border-color: var(--accent); }
+    .option:active:not(:disabled) { transform: translateY(1px); }
+    .option:disabled { cursor: default; }
+    .option.correct { border-color: var(--good); background: rgba(61,220,151,0.14); }
+    .option.wrong { border-color: var(--bad); background: rgba(255,107,107,0.14); }
+
+    .feedback { min-height: 24px; margin: 18px 0 6px; font-weight: 600; }
+    .feedback.good { color: var(--good); }
+    .feedback.bad { color: var(--bad); }
+
+    .row-end { display: flex; justify-content: flex-end; }
+
+    /* results */
+    .ring-wrap { display: flex; justify-content: center; margin: 8px 0 18px; }
+    .ring {
+      width: 160px; height: 160px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: conic-gradient(var(--accent) 0deg, var(--track) 0deg);
+    }
+    .ring-inner {
+      width: 124px; height: 124px; border-radius: 50%;
+      background: var(--card);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .ring-inner .pct { font-size: 30px; font-weight: 800; }
+    .ring-inner .lbl { font-size: 12px; color: var(--muted); }
+    .result-center { text-align: center; }
+    .result-center h2 { margin: 6px 0; font-size: 24px; }
+    .result-center .final { font-size: 18px; color: var(--muted); margin-bottom: 4px; }
+    .result-center .msg { color: var(--muted); margin-bottom: 22px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <!-- Start -->
+    <section id="start-screen">
+      <h1>N5 Vocabulary Quiz</h1>
+      <p class="intro">
+        Pick a lesson and test yourself on all
+        <strong id="total-words"></strong> of its words. For every word you'll be
+        quizzed on its <strong>meaning</strong>, and for words written in kanji,
+        on its <strong>reading</strong> too. You'll get a score and grade at the end.
+      </p>
+
+      <label class="field-label" for="lesson-select">Choose a lesson</label>
+      <select id="lesson-select"></select>
+
+      <button class="btn" id="start-btn">Start quiz →</button>
+    </section>
+
+    <!-- Quiz -->
+    <section id="quiz-screen" class="hidden">
+      <div class="lesson" id="lesson-title"></div>
+      <div class="topbar">
+        <span id="progress-text">Question 1</span>
+        <span id="score-text">Score: 0</span>
+      </div>
+      <div class="progress"><div id="progress-bar"></div></div>
+
+      <div class="prompt" id="prompt"></div>
+      <div class="sub-prompt" id="sub-prompt"></div>
+
+      <div class="options" id="options"></div>
+
+      <div class="feedback" id="feedback"></div>
+      <div class="row-end">
+        <button class="btn hidden" id="next-btn">Next →</button>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="result-screen" class="hidden result-center">
+      <h1>Quiz complete</h1>
+      <div class="ring-wrap">
+        <div class="ring" id="score-ring">
+          <div class="ring-inner">
+            <span class="pct" id="final-pct">0%</span>
+            <span class="lbl">score</span>
+          </div>
+        </div>
+      </div>
+      <div class="final">You got <strong id="final-score">0 / 0</strong></div>
+      <h2 id="grade"></h2>
+      <div class="msg" id="grade-msg"></div>
+      <button class="btn" id="retry-btn">Try again ↻</button>
+    </section>
+  </main>
+
+  <script src="../data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
