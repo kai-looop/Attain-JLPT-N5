@@ -232,6 +232,10 @@ document.addEventListener("DOMContentLoaded", () => {
     select.appendChild(opt);
   });
 
+  // Honour a lesson passed in from the flashcards page (?lesson=N).
+  const requested = new URLSearchParams(window.location.search).get("lesson");
+  if (requested && LESSONS[requested]) select.value = requested;
+
   select.onchange = updateWordCount;
   updateWordCount();
 

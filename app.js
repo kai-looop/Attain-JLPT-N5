@@ -220,6 +220,11 @@ function reset(){
   seen.clear(); pos = 0; render();
 }
 
+/* Jump to the quiz for the lesson currently being studied. */
+function goToQuiz(){
+  window.location.href = `quiz/?lesson=${encodeURIComponent(lessonKey)}`;
+}
+
 /* ---------- lesson switching ------------------------------- */
 function loadLesson(key){
   lessonKey = key;
@@ -269,6 +274,7 @@ if (typeof window !== "undefined"){
   window.setDir = setDir;
   window.toggleShuffle = toggleShuffle;
   window.reset = reset;
+  window.goToQuiz = goToQuiz;
 }
 
 if (typeof document !== "undefined"){

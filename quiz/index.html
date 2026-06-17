@@ -76,6 +76,14 @@
     }
     .btn:hover { opacity: .92; }
     .btn:active { transform: translateY(1px); }
+    a.btn { display: inline-block; text-align: center; text-decoration: none; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 2px solid var(--track);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); opacity: 1; }
+    .start-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
     .topbar {
       display: flex;
@@ -149,7 +157,10 @@
       <label class="field-label" for="lesson-select">Choose a lesson</label>
       <select id="lesson-select"></select>
 
-      <button class="btn" id="start-btn">Start quiz →</button>
+      <div class="start-actions">
+        <a class="btn btn-ghost" href="../">← Back to flashcards</a>
+        <button class="btn" id="start-btn">Start quiz →</button>
+      </div>
     </section>
 
     <!-- Quiz -->
