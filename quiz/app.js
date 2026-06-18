@@ -5,6 +5,10 @@
    word list of whichever lesson is currently selected.
    ============================================================ */
 
+/* ---------- difficulty config ---------- */
+const OPTION_COUNT = 6;        // choices per question
+const QUESTION_SECONDS = 12;   // countdown when timed mode is on
+
 /* WORDS / lessonLabel are populated from the selected lesson at quiz start. */
 let WORDS = [];
 let lessonLabel = "";
@@ -28,22 +32,51 @@ function hasKanji(w) {
   return w.kanji && w.kanji.trim() !== "";
 }
 
+const isKanjiChar = (ch) => {
+  const c = ch.codePointAt(0);
+  return (c >= 0x4e00 && c <= 0x9fff) || (c >= 0x3400 && c <= 0x4dbf);
+};
+
+/* How "confusable" candidate `b` is with the target `a`. Higher = a better
+   (harder) distractor: same part of speech, similar length, or a shared kanji
+   all make a wrong option more tempting than a random unrelated word. */
+function similarity(a, b) {
+  let s = 0;
+  if (a.pos && b.pos && a.pos === b.pos) s += 3;
+  const d = Math.abs((a.kana ? a.kana.length : 0) - (b.kana ? b.kana.length : 0));
+  if (d === 0) s += 2;
+  else if (d === 1) s += 1;
+  if (a.kanji && b.kanji) {
+    const setA = new Set([...a.kanji].filter(isKanjiChar));
+    for (const ch of b.kanji) {
+      if (setA.has(ch)) { s += 2; break; }
+    }
+  }
+  return s;
+}
+
 /* Build a single multiple-choice question.
    - prompt/sub: what the learner reads
    - correct:    the right answer text
    - optionText: how to render an option from a word (also used for distractors)
-   Three distractors are drawn from other words, deduped against the answer. */
+   Distractors are the words most *confusable* with the answer (see similarity),
+   with a little random jitter so the same word doesn't always draw the same
+   decoys. We fill up to OPTION_COUNT-1 distractors, deduped against the answer. */
 function makeQuestion(word, prompt, sub, correct, optionText) {
+  const ranked = WORDS
+    .filter((w) => w !== word)
+    .map((w) => ({ w, s: similarity(word, w) + Math.random() }))
+    .sort((x, y) => y.s - x.s);
+
   const distractors = [];
   const seen = new Set([correct]);
-  for (const w of shuffle(WORDS)) {
-    if (w === word) continue;
+  for (const { w } of ranked) {
     const t = optionText(w);
     if (t && !seen.has(t)) {
       seen.add(t);
       distractors.push(t);
     }
-    if (distractors.length === 3) break;
+    if (distractors.length === OPTION_COUNT - 1) break;
   }
   const options = shuffle([correct, ...distractors]);
   return { prompt, sub, correct, options };
@@ -51,39 +84,41 @@ function makeQuestion(word, prompt, sub, correct, optionText) {
 
 /* ---------- quiz construction ---------- */
 /*
-   Full coverage of the selected lesson:
-     • MEANING  — every word: show the word (kanji if available), pick the English meaning.
-     • READING  — every word that HAS kanji: show the kanji, pick its kana reading.
-   So all kanji and all meanings are tested. Questions are shuffled.
+   Every word is tested on MEANING, and every kanji word on its READING — but
+   each in a randomly chosen direction, so the harder "produce the Japanese"
+   side comes up alongside plain recognition:
+     • MEANING  — JP → English, or (harder) English → pick the Japanese.
+     • READING  — kanji → kana, or (harder) kana → pick the matching kanji.
+   All distractors are drawn from the current lesson only.
 */
+const coin = () => Math.random() < 0.5;
+
 function buildQuiz() {
   const questions = [];
 
   WORDS.forEach((word) => {
-    // Meaning question — shows kanji when available so the kanji is seen.
-    // The kana reading is intentionally NOT shown here, so the learner must
-    // actually recognise the kanji rather than read it off the hint.
-    questions.push(
-      makeQuestion(
-        word,
-        jpFace(word),
-        "What does this mean?",
-        word.en,
-        (w) => w.en
-      )
-    );
-
-    // Reading question — only for words that have kanji.
-    if (hasKanji(word)) {
+    // MEANING — flip between recognising the meaning and producing the Japanese.
+    if (coin()) {
       questions.push(
-        makeQuestion(
-          word,
-          word.kanji,
-          "How is this read?",
-          word.kana,
-          (w) => w.kana
-        )
+        makeQuestion(word, jpFace(word), "What does this mean?", word.en, (w) => w.en)
       );
+    } else {
+      questions.push(
+        makeQuestion(word, word.en, "Which is this in Japanese?", jpFace(word), (w) => jpFace(w))
+      );
+    }
+
+    // READING — only for kanji words; flip between reading and recognising it.
+    if (hasKanji(word)) {
+      if (coin()) {
+        questions.push(
+          makeQuestion(word, word.kanji, "How is this read?", word.kana, (w) => w.kana)
+        );
+      } else {
+        questions.push(
+          makeQuestion(word, word.kana, "Which kanji is this?", word.kanji, (w) => w.kanji)
+        );
+      }
     }
   });
 
@@ -100,13 +135,46 @@ let selected = null;
 // Questions the learner got wrong or tapped "I don't know" on, kept for the
 // end-of-quiz review. Each: { prompt, sub, correct, chosen, type }.
 let missed = [];
+let timed = false;         // timed mode chosen on the start screen
+let timerId = null;        // active per-question countdown interval
 
 /* ---------- DOM ---------- */
 const el = (id) => document.getElementById(id);
 
+/* ---------- per-question timer ---------- */
+function stopTimer() {
+  if (timerId !== null) { clearInterval(timerId); timerId = null; }
+}
+
+function renderTimer(left) {
+  const t = el("timer-text");
+  t.textContent = `⏱ ${left}s`;
+  t.classList.toggle("warn", left <= 3);
+}
+
+// Start a fresh countdown for the current question; on zero, auto-skip.
+function startTimer() {
+  stopTimer();
+  if (!timed) { el("timer-text").textContent = ""; return; }
+  let left = QUESTION_SECONDS;
+  renderTimer(left);
+  timerId = setInterval(() => {
+    left -= 1;
+    if (left <= 0) {
+      stopTimer();
+      renderTimer(0);
+      dontKnow(); // out of time → counts as "I don't know"
+    } else {
+      renderTimer(left);
+    }
+  }, 1000);
+}
+
 function start() {
   // Load the lesson the learner picked.
   const key = el("lesson-select").value;
+  timed = el("timer-toggle").checked;
+
   const lesson = LESSONS[key];
   WORDS = lesson.words;
   lessonLabel = `Lesson ${key}`;
@@ -131,9 +199,6 @@ function renderQuestion() {
   const q = quiz[current];
 
   el("progress-text").textContent = `Question ${current + 1} of ${quiz.length}`;
-  // Don't reveal the running score mid-quiz — it would leak whether the last
-  // answer was right. The final score is shown on the results screen.
-  el("score-text").textContent = "";
   el("progress-bar").style.width = `${(current / quiz.length) * 100}%`;
 
   el("prompt").textContent = q.prompt;
@@ -150,6 +215,8 @@ function renderQuestion() {
     btn.onclick = () => select(btn, opt);
     optionsBox.appendChild(btn);
   });
+
+  startTimer();
 }
 
 // Pick (or re-pick) an option. Purely visual — nothing is graded until confirm.
@@ -163,6 +230,7 @@ function select(btn, opt) {
 // Grade the current question silently and move on. No right/wrong is shown.
 // `forceSkip` (from "I don't know") records a skip regardless of selection.
 function settle(forceSkip) {
+  stopTimer();
   const q = quiz[current];
   const pick = forceSkip ? null : selected;
 
@@ -184,6 +252,7 @@ function confirmAndNext() { settle(false); }
 function dontKnow() { settle(true); }
 
 function showResults() {
+  stopTimer();
   el("quiz-screen").classList.add("hidden");
   el("result-screen").classList.remove("hidden");
 

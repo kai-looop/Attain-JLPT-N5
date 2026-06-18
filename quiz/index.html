@@ -62,6 +62,19 @@
     #lesson-select option { background: var(--card); color: var(--text); }
     p.intro { color: var(--muted); line-height: 1.6; }
 
+    .check {
+      display: flex; align-items: flex-start; gap: 10px;
+      color: var(--text); font-size: 14px; line-height: 1.4;
+      background: var(--card-2); border: 1px solid var(--track);
+      border-radius: 12px; padding: 13px 14px; margin-bottom: 22px; cursor: pointer;
+    }
+    .check input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--accent); cursor: pointer; flex: none; }
+    .check span { color: var(--muted); }
+    .check strong { color: var(--text); }
+
+    #timer-text { font-variant-numeric: tabular-nums; font-weight: 700; }
+    #timer-text.warn { color: var(--bad); }
+
     .btn {
       appearance: none;
       border: none;
@@ -180,6 +193,11 @@
       <label class="field-label" for="lesson-select">Choose a lesson</label>
       <select id="lesson-select"></select>
 
+      <label class="check">
+        <input type="checkbox" id="timer-toggle" />
+        <span>Timer mode <strong>(12s)</strong></span>
+      </label>
+
       <div class="start-actions">
         <a class="btn btn-ghost" href="../index.html">← Back to flashcards</a>
         <button class="btn" id="start-btn">Start quiz →</button>
@@ -191,7 +209,7 @@
       <div class="lesson" id="lesson-title"></div>
       <div class="topbar">
         <span id="progress-text">Question 1</span>
-        <span id="score-text">Score: 0</span>
+        <span id="timer-text"></span>
       </div>
       <div class="progress"><div id="progress-bar"></div></div>
 
