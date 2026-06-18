@@ -94,7 +94,12 @@ function buildQuiz() {
 let quiz = [];
 let current = 0;
 let score = 0;
-let answered = false;
+// The option the learner has currently picked (text), or null for "no pick".
+// Grading is deferred until they confirm, so this can change freely beforehand.
+let selected = null;
+// Questions the learner got wrong or tapped "I don't know" on, kept for the
+// end-of-quiz review. Each: { prompt, sub, correct, chosen, type }.
+let missed = [];
 
 /* ---------- DOM ---------- */
 const el = (id) => document.getElementById(id);
@@ -112,26 +117,29 @@ function start() {
   quiz = buildQuiz();
   current = 0;
   score = 0;
-  answered = false;
+  selected = null;
+  missed = [];
   el("start-screen").classList.add("hidden");
   el("result-screen").classList.add("hidden");
+  el("review-screen").classList.add("hidden");
   el("quiz-screen").classList.remove("hidden");
   renderQuestion();
 }
 
 function renderQuestion() {
-  answered = false;
+  selected = null;
   const q = quiz[current];
 
   el("progress-text").textContent = `Question ${current + 1} of ${quiz.length}`;
-  el("score-text").textContent = `Score: ${score}`;
+  // Don't reveal the running score mid-quiz — it would leak whether the last
+  // answer was right. The final score is shown on the results screen.
+  el("score-text").textContent = "";
   el("progress-bar").style.width = `${(current / quiz.length) * 100}%`;
 
   el("prompt").textContent = q.prompt;
   el("sub-prompt").textContent = q.sub || "";
-  el("feedback").textContent = "";
-  el("feedback").className = "feedback";
-  el("next-btn").classList.add("hidden");
+  el("confirm-btn").textContent =
+    current === quiz.length - 1 ? "Confirm & See results" : "Confirm & Next →";
 
   const optionsBox = el("options");
   optionsBox.innerHTML = "";
@@ -139,48 +147,41 @@ function renderQuestion() {
     const btn = document.createElement("button");
     btn.className = "option";
     btn.textContent = opt;
-    btn.onclick = () => choose(btn, opt, q);
+    btn.onclick = () => select(btn, opt);
     optionsBox.appendChild(btn);
   });
 }
 
-function choose(btn, opt, q) {
-  if (answered) return;
-  answered = true;
+// Pick (or re-pick) an option. Purely visual — nothing is graded until confirm.
+function select(btn, opt) {
+  selected = opt;
+  Array.from(el("options").children).forEach((b) =>
+    b.classList.toggle("selected", b === btn)
+  );
+}
 
-  const buttons = Array.from(el("options").children);
-  buttons.forEach((b) => {
-    b.disabled = true;
-    if (b.textContent === q.correct) b.classList.add("correct");
-  });
+// Grade the current question silently and move on. No right/wrong is shown.
+// `forceSkip` (from "I don't know") records a skip regardless of selection.
+function settle(forceSkip) {
+  const q = quiz[current];
+  const pick = forceSkip ? null : selected;
 
-  const fb = el("feedback");
-  if (opt === q.correct) {
+  if (pick === null) {
+    // Nothing chosen (or skipped on purpose) — counts as "didn't know".
+    missed.push({ prompt: q.prompt, sub: q.sub, correct: q.correct, chosen: null, type: "skipped" });
+  } else if (pick === q.correct) {
     score++;
-    btn.classList.add("correct");
-    fb.textContent = "✓ Correct!";
-    fb.className = "feedback good";
   } else {
-    btn.classList.add("wrong");
-    fb.textContent = `✗ Correct answer: ${q.correct}`;
-    fb.className = "feedback bad";
+    missed.push({ prompt: q.prompt, sub: q.sub, correct: q.correct, chosen: pick, type: "wrong" });
   }
 
-  el("score-text").textContent = `Score: ${score}`;
-  el("next-btn").classList.remove("hidden");
-  el("next-btn").textContent =
-    current === quiz.length - 1 ? "See results" : "Next →";
-}
-
-function next() {
-  if (!answered) return;
   current++;
-  if (current < quiz.length) {
-    renderQuestion();
-  } else {
-    showResults();
-  }
+  if (current < quiz.length) renderQuestion();
+  else showResults();
 }
+
+function confirmAndNext() { settle(false); }
+function dontKnow() { settle(true); }
 
 function showResults() {
   el("quiz-screen").classList.add("hidden");
@@ -207,6 +208,59 @@ function showResults() {
     ring.style.background =
       `conic-gradient(var(--accent) ${pct * 3.6}deg, var(--track) 0deg)`;
   }
+
+  // Offer a review only when there's something to review.
+  const reviewBtn = el("review-btn");
+  if (missed.length) {
+    reviewBtn.textContent = `Review ${missed.length} missed →`;
+    reviewBtn.classList.remove("hidden");
+  } else {
+    reviewBtn.classList.add("hidden");
+  }
+}
+
+// Escape user-facing text before injecting as HTML (data is trusted, but the
+// review list builds markup, so stay safe).
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function showReview() {
+  el("result-screen").classList.add("hidden");
+  el("review-screen").classList.remove("hidden");
+
+  const wrong = missed.filter((m) => m.type === "wrong").length;
+  const skipped = missed.filter((m) => m.type === "skipped").length;
+  const parts = [];
+  if (wrong) parts.push(`${wrong} wrong`);
+  if (skipped) parts.push(`${skipped} skipped`);
+  el("review-intro").textContent =
+    `The ${missed.length} you missed (${parts.join(", ")}). Study these, then try again.`;
+
+  el("review-list").innerHTML = missed
+    .map((m) => {
+      const yours =
+        m.type === "wrong"
+          ? `<div class="review-ans your-ans">✗ You chose: ${esc(m.chosen)}</div>`
+          : `<div class="review-ans skip-ans">You didn't know this one</div>`;
+      return (
+        `<div class="review-item ${m.type}">` +
+        `<div class="review-prompt">${esc(m.prompt)}</div>` +
+        `<div class="review-sub">${esc(m.sub)}</div>` +
+        `<div class="review-ans correct-ans">✓ ${esc(m.correct)}</div>` +
+        yours +
+        `</div>`
+      );
+    })
+    .join("");
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function backToResults() {
+  el("review-screen").classList.add("hidden");
+  el("result-screen").classList.remove("hidden");
 }
 
 // Sorts lesson keys numerically (so 2 comes before 10).
@@ -240,6 +294,18 @@ document.addEventListener("DOMContentLoaded", () => {
   updateWordCount();
 
   el("start-btn").onclick = start;
-  el("next-btn").onclick = next;
+  el("confirm-btn").onclick = confirmAndNext;
   el("retry-btn").onclick = start;
+  el("dont-know-btn").onclick = dontKnow;
+  el("review-btn").onclick = showReview;
+  el("review-back-btn").onclick = backToResults;
+  el("review-retry-btn").onclick = start;
+
+  // Enter behaves like "Confirm & Next" while a question is on screen.
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    if (el("quiz-screen").classList.contains("hidden")) return;
+    e.preventDefault();
+    confirmAndNext();
+  });
 });

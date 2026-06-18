@@ -268,7 +268,11 @@ function init(){
   window.addEventListener("resize", fitBigText);
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitBigText); }
 
-  loadLesson("1");
+  // Honour a lesson passed in from the study plan (?lesson=N); fall back to 1.
+  const requested = new URLSearchParams(window.location.search).get("lesson");
+  const start = (requested && LESSONS[requested]) ? requested : "1";
+  sel.value = start;
+  loadLesson(start);
 }
 
 // expose handlers used by inline onclick

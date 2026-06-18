@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N5 Study Plan — Today</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ai:#1b2a4a;--ai-deep:#0f1c33;--washi:#f7f3e9;--washi-edge:#ece4d2;
+    --shu:#c8442e;--shu-soft:#e8b9ad;--sumi:#23211c;--muted:#6f6a5e;
+    --gold:#b08d3f;--line:#d8cfba;
+    --jp:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+    --sans:"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{
+    font-family:"Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
+    background:
+      radial-gradient(circle at 20% 0%, #233458 0%, transparent 55%),
+      radial-gradient(circle at 90% 100%, #16243f 0%, transparent 50%),
+      var(--ai-deep);
+    color:var(--washi);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;padding:24px 16px 48px;
+  }
+  header{text-align:center;margin-bottom:14px;max-width:680px}
+  .eyebrow{font-family:var(--sans);letter-spacing:.42em;text-transform:uppercase;
+    font-size:11px;color:var(--shu-soft);margin-bottom:10px;padding-left:.42em}
+  h1{font-size:clamp(26px,6vw,40px);font-weight:600;line-height:1.1;letter-spacing:.04em}
+  h1 .sub{display:block;font-family:var(--jp);font-size:13px;letter-spacing:.05em;
+    color:var(--muted);margin-top:8px;font-weight:400}
+
+  /* day navigator */
+  .nav-bar{display:flex;align-items:center;gap:14px;margin-top:20px}
+  .nav{width:48px;height:48px;font-size:20px;background:rgba(255,255,255,.08);
+    color:var(--washi);border:1px solid rgba(255,255,255,.14);border-radius:10px;
+    font-family:var(--sans);cursor:pointer;transition:transform .12s ease, background .2s ease}
+  .nav:hover{background:rgba(255,255,255,.16)}
+  .nav:active{transform:translateY(1px)}
+  .nav:disabled{opacity:.3;cursor:default}
+  .day-head{font-family:var(--sans);text-align:center;min-width:200px}
+  .day-no{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--shu-soft)}
+  .day-date{font-size:18px;letter-spacing:.04em;color:var(--washi);margin-top:4px}
+  .today-tag{display:inline-block;margin-top:6px;font-size:10px;letter-spacing:.16em;
+    text-transform:uppercase;color:#fff;background:var(--shu);border-radius:20px;padding:3px 10px}
+
+  .toolbar{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;justify-content:center}
+  .chip{font-family:var(--sans);font-size:12px;letter-spacing:.08em;padding:9px 16px;
+    background:transparent;color:var(--washi);border:1px solid rgba(255,255,255,.2);
+    border-radius:30px;cursor:pointer;transition:all .2s ease;text-decoration:none}
+  .chip:hover{border-color:var(--shu-soft);color:var(--shu-soft)}
+  .chip.solid{background:var(--shu);border-color:var(--shu);color:#fff;font-weight:600}
+  .chip.solid:hover{background:#d44e37;color:#fff}
+
+  /* the day card */
+  .sheet{width:100%;max-width:680px;margin-top:24px;background:var(--washi);
+    color:var(--sumi);border-radius:14px;border:1px solid var(--washi-edge);
+    box-shadow:0 22px 50px -20px rgba(0,0,0,.7), inset 0 0 0 6px var(--washi), inset 0 0 0 7px var(--line);
+    padding:30px 28px}
+  .sheet.is-review{box-shadow:0 22px 50px -20px rgba(0,0,0,.7), inset 0 0 0 6px var(--washi), inset 0 0 0 7px var(--gold)}
+  .kind{font-family:var(--sans);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--shu);font-weight:700}
+  .kind.review{color:var(--gold)}
+  .sheet h2{font-family:var(--jp);font-size:clamp(20px,4.5vw,26px);font-weight:600;
+    line-height:1.25;margin:8px 0 4px;color:var(--ai)}
+
+  section.block{margin-top:22px}
+  .block-label{font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-bottom:12px;
+    display:flex;align-items:center;gap:8px}
+  .block-label .badge{background:var(--ai);color:var(--washi);border-radius:6px;
+    font-size:10px;padding:2px 7px;letter-spacing:.1em}
+  ul.lines{list-style:none;display:flex;flex-direction:column;gap:8px}
+  ul.lines li{font-family:var(--jp);font-size:15px;line-height:1.45;padding-left:18px;position:relative}
+  ul.lines li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;
+    border-radius:50%;background:var(--shu-soft)}
+
+  .pills{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{font-family:var(--sans);font-size:12px;letter-spacing:.03em;color:var(--ai);
+    background:rgba(176,141,63,.12);border:1px solid var(--line);border-radius:8px;padding:6px 11px}
+
+  /* vocab links → flashcards */
+  .vocab-links{display:flex;flex-direction:column;gap:10px}
+  a.vocab{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    font-family:var(--jp);font-size:14px;text-decoration:none;color:var(--ai);
+    background:rgba(200,68,46,.06);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;transition:all .18s ease}
+  a.vocab:hover{border-color:var(--shu);background:rgba(200,68,46,.12)}
+  a.vocab .go{font-family:var(--sans);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--shu);white-space:nowrap;font-weight:600}
+  a.vocab .go .arrow{font-size:14px}
+
+  .notes{margin-top:22px;font-family:var(--jp);font-size:13.5px;line-height:1.5;color:var(--muted);
+    background:rgba(176,141,63,.08);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;
+    padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+  .empty-note{font-family:var(--sans);font-size:12px;color:#b9b1a0;letter-spacing:.04em;font-style:italic}
+
+  footer{margin-top:30px;font-family:var(--sans);font-size:11px;color:var(--muted);
+    letter-spacing:.06em;text-align:center;line-height:1.7}
+  footer a{color:var(--shu-soft);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  kbd{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);
+    border-radius:4px;padding:1px 6px;font-size:10px}
+  @media (max-width:420px){.nav{width:44px;height:44px}.day-head{min-width:150px}.sheet{padding:24px 18px}}
+</style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">JLPT N5 · Study Plan</div>
+    <h1 id="planTitle">N5 Study Plan<span class="sub" id="planSub"></span></h1>
+  </header>
+
+  <div class="nav-bar">
+    <button class="nav" id="prevBtn" onclick="step(-1)" aria-label="Previous day">&lsaquo;</button>
+    <div class="day-head">
+      <div class="day-no" id="dayNo">Day 1 / 22</div>
+      <div class="day-date" id="dayDate">—</div>
+      <div id="todayWrap"></div>
+    </div>
+    <button class="nav" id="nextBtn" onclick="step(1)" aria-label="Next day">&rsaquo;</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="chip" id="todayBtn" onclick="goToday()">&#9737; Today</button>
+    <a class="chip" href="../index.html">&larr; Flashcards</a>
+  </div>
+
+  <div class="sheet" id="sheet"><!-- rendered --></div>
+
+  <footer>
+    <kbd>&larr;</kbd> <kbd>&rarr;</kbd> change day ·
+    <kbd>t</kbd> jump to today<br>
+    Genki 1 order · Tue 16 Jun → Wed 15 Jul 2026
+  </footer>
+
+<script src="plan-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
