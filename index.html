@@ -87,10 +87,22 @@
   .breakdown{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;max-width:100%}
   .kb{display:flex;flex-direction:column;align-items:center;gap:3px;
     background:rgba(176,141,63,.1);border:1px solid var(--line);border-radius:8px;
-    padding:6px 10px;min-width:54px}
+    padding:6px 10px;min-width:54px;text-decoration:none;cursor:pointer;
+    transition:border-color .18s ease, background .18s ease}
+  .kb:hover{background:rgba(200,68,46,.12);border-color:var(--shu)}
   .kb-char{font-family:var(--jp);font-size:24px;line-height:1;color:var(--ai)}
   .kb-gloss{font-family:"Helvetica Neue",Arial,sans-serif;font-size:9.5px;letter-spacing:.02em;
     text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.2;max-width:84px}
+
+  /* WaniKani vocabulary link */
+  .wk-link{display:inline-flex;align-items:center;gap:7px;margin-top:14px;
+    font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;text-decoration:none;cursor:pointer;
+    padding:7px 14px;border-radius:30px;color:#fff;background:#00a1f1;
+    box-shadow:0 6px 14px -8px rgba(0,161,241,.9);transition:background .18s ease, transform .12s ease}
+  .wk-link:hover{background:#0090d8}
+  .wk-link:active{transform:translateY(1px)}
+  .wk-mark{font-family:var(--jp);font-size:14px;line-height:1}
 
   .back{transform:rotateY(180deg)}
   .flip-hint{position:absolute;bottom:14px;font-family:"Helvetica Neue",Arial,sans-serif;
@@ -155,6 +167,9 @@
         <div class="romaji" id="bRomaji"></div>
         <div class="big" id="bBig"></div>
         <div class="breakdown" id="breakdown"></div>
+        <a class="wk-link" id="wkVocab" href="#" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+          <span class="wk-mark">鰐</span>WaniKani &rarr;
+        </a>
         <div class="pos" id="bPos"></div>
         <span class="flip-hint">tap to flip back</span>
       </div>

@@ -116,16 +116,34 @@ let seen = new Set();
 const card = () => $("card");
 const current = () => WORDS[order[pos]];
 
+/* ---------- WaniKani links --------------------------------- */
+const WK_BASE = "https://www.wanikani.com";
+const wkVocabUrl = term => `${WK_BASE}/vocabulary/${encodeURIComponent(term)}`;
+const wkKanjiUrl = ch => `${WK_BASE}/kanji/${encodeURIComponent(ch)}`;
+
 /* ---------- rendering -------------------------------------- */
 function renderBreakdown(w){
   const items = breakdown(w.kanji);
   const box = $("breakdown");
   if(!items.length){ box.innerHTML = ""; box.style.display = "none"; return; }
   box.style.display = "flex";
+  // Each kanji links to its WaniKani page; stopPropagation keeps the click
+  // from also flipping the card.
   box.innerHTML = items.map(it =>
-    `<span class="kb"><span class="kb-char">${it.char}</span>` +
-    `<span class="kb-gloss">${it.gloss}</span></span>`
+    `<a class="kb" href="${wkKanjiUrl(it.char)}" target="_blank" rel="noopener"` +
+    ` onclick="event.stopPropagation()" title="View 「${it.char}」 on WaniKani">` +
+    `<span class="kb-char">${it.char}</span>` +
+    `<span class="kb-gloss">${it.gloss}</span></a>`
   ).join("");
+}
+
+function renderWaniKani(w){
+  const link = $("wkVocab");
+  if(!link) return;
+  // WaniKani indexes vocabulary by its written form (kanji when present).
+  const term = w.kanji || w.kana;
+  link.href = wkVocabUrl(term);
+  link.title = `View 「${term}」 on WaniKani`;
 }
 
 /* Shrink the big word until it fits on one line within the card face.
@@ -178,6 +196,7 @@ function render(){
   }
   $("bPos").textContent = w.pos;
   renderBreakdown(w);
+  renderWaniKani(w);
 
   fitBigText();
 
