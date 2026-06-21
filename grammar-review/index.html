@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>N5 Grammar Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1226;
+      --card: #1b1f3b;
+      --card-2: #232850;
+      --accent: #6c8cff;
+      --accent-2: #8a6cff;
+      --good: #3ddc97;
+      --bad: #ff6b6b;
+      --text: #eef0ff;
+      --muted: #9aa0c7;
+      --track: #2c3160;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #2a2f5e, var(--bg));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 580px;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+      padding: 28px;
+    }
+    .hidden { display: none !important; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .lesson { color: var(--muted); font-size: 15px; margin-bottom: 22px; }
+    p.intro { color: var(--muted); line-height: 1.6; }
+
+    .check {
+      display: flex; align-items: flex-start; gap: 10px;
+      color: var(--text); font-size: 14px; line-height: 1.4;
+      background: var(--card-2); border: 1px solid var(--track);
+      border-radius: 12px; padding: 13px 14px; margin: 18px 0 22px; cursor: pointer;
+    }
+    .check input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--accent); cursor: pointer; flex: none; }
+    .check span { color: var(--muted); }
+    .check strong { color: var(--text); }
+
+    .btn {
+      appearance: none; border: none; cursor: pointer;
+      font-size: 16px; font-weight: 600; color: #fff;
+      padding: 14px 22px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      transition: transform .08s ease, opacity .2s;
+    }
+    .btn:hover { opacity: .92; }
+    .btn:active { transform: translateY(1px); }
+    a.btn { display: inline-block; text-align: center; text-decoration: none; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 2px solid var(--track); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); opacity: 1; }
+    .start-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .topbar { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .progress { height: 8px; background: var(--track); border-radius: 99px; overflow: hidden; margin-bottom: 18px; }
+    .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .3s ease; }
+
+    .topic-badge {
+      display: inline-block; font-size: 12px; font-weight: 600;
+      color: var(--accent); background: rgba(108,140,255,0.14);
+      border: 1px solid rgba(108,140,255,0.35);
+      padding: 4px 10px; border-radius: 99px; margin-bottom: 14px;
+    }
+    .prompt { font-size: 28px; font-weight: 700; line-height: 1.35; margin-bottom: 4px; word-break: break-word; }
+    .sub-prompt { color: var(--muted); font-size: 15px; min-height: 20px; margin-bottom: 20px; }
+
+    .options { display: grid; gap: 12px; }
+    .option {
+      text-align: left; font-size: 16px; color: var(--text);
+      background: var(--card-2); border: 2px solid transparent; border-radius: 12px;
+      padding: 14px 16px; cursor: pointer;
+      transition: border-color .15s, background .15s, transform .06s;
+    }
+    .option:hover { border-color: var(--accent); }
+    .option:active { transform: translateY(1px); }
+    .option.selected { border-color: var(--accent); background: rgba(108,140,255,0.18); }
+
+    #short-box { display: block; }
+    #short-input {
+      width: 100%; font-size: 22px; color: var(--text);
+      background: var(--card-2); border: 2px solid var(--track);
+      border-radius: 12px; padding: 14px 16px;
+      font-family: inherit;
+    }
+    #short-input:focus { outline: none; border-color: var(--accent); }
+
+    .quiz-actions { display: flex; gap: 12px; margin-top: 18px; }
+    .quiz-actions .confirm { flex: 1; }
+    .hint { color: var(--muted); font-size: 13px; text-align: center; margin-top: 12px; min-height: 18px; }
+
+    /* results */
+    .result-center { text-align: center; }
+    .ring-wrap { display: flex; justify-content: center; margin: 8px 0 18px; }
+    .ring {
+      width: 160px; height: 160px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: conic-gradient(var(--accent) 0deg, var(--track) 0deg);
+    }
+    .ring-inner {
+      width: 124px; height: 124px; border-radius: 50%; background: var(--card);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .ring-inner .pct { font-size: 30px; font-weight: 800; }
+    .ring-inner .lbl { font-size: 12px; color: var(--muted); }
+    .result-center h2 { margin: 6px 0; font-size: 24px; }
+    .result-center .final { font-size: 18px; color: var(--muted); margin-bottom: 4px; }
+    .result-center .msg { color: var(--muted); margin-bottom: 22px; }
+    .result-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* review */
+    #review-screen h1 { margin-bottom: 6px; }
+    #review-intro { margin-top: 0; margin-bottom: 20px; }
+    #review-list { display: grid; gap: 12px; margin-bottom: 24px; text-align: left; }
+    .review-item {
+      background: var(--card-2); border: 1px solid rgba(255,255,255,0.06);
+      border-left: 4px solid var(--bad); border-radius: 12px; padding: 14px 16px;
+    }
+    .review-item.skipped { border-left-color: var(--muted); }
+    .review-topic {
+      display: inline-block; font-size: 11px; font-weight: 600; color: var(--accent);
+      background: rgba(108,140,255,0.12); padding: 3px 8px; border-radius: 99px; margin-bottom: 8px;
+    }
+    .review-prompt { font-size: 19px; font-weight: 700; line-height: 1.35; word-break: break-word; }
+    .review-sub { color: var(--muted); font-size: 13px; margin: 4px 0 10px; }
+    .review-ans { font-size: 15px; margin-top: 4px; }
+    .review-ans.correct-ans { color: var(--good); font-weight: 600; }
+    .review-ans.your-ans { color: var(--bad); }
+    .review-ans.skip-ans { color: var(--muted); font-style: italic; }
+    .review-why { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 10px; border-top: 1px dashed var(--track); padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <!-- Start -->
+    <section id="start-screen">
+      <h1 id="review-title">Grammar Review</h1>
+      <div class="lesson" id="review-subtitle"></div>
+      <p class="intro">
+        <strong id="total-q">0</strong> questions — a mix of multiple-choice and
+        short-answer (type the word in kana or kanji). Short answers are graded
+        leniently: spaces and a trailing <strong>です</strong> are ignored, and
+        either kana or kanji is accepted. At the end you'll see every question
+        you missed, with the right answer and a quick why, plus your overall score.
+      </p>
+
+      <label class="check">
+        <input type="checkbox" id="shuffle-toggle" />
+        <span>Shuffle question order <strong>(off = grouped by topic)</strong></span>
+      </label>
+
+      <div class="start-actions">
+        <a class="btn btn-ghost" href="../index.html">← Back</a>
+        <button class="btn" id="start-btn">Start review →</button>
+      </div>
+    </section>
+
+    <!-- Quiz -->
+    <section id="quiz-screen" class="hidden">
+      <div class="topbar">
+        <span id="progress-text">Question 1</span>
+      </div>
+      <div class="progress"><div id="progress-bar"></div></div>
+
+      <span class="topic-badge" id="topic"></span>
+      <div class="prompt" id="prompt"></div>
+      <div class="sub-prompt" id="sub-prompt"></div>
+
+      <div class="options" id="options"></div>
+      <div id="short-box" class="hidden">
+        <input type="text" id="short-input" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      </div>
+
+      <div class="quiz-actions">
+        <button class="btn btn-ghost" id="dont-know-btn">I don't know</button>
+        <button class="btn confirm" id="confirm-btn">Confirm &amp; Next →</button>
+      </div>
+      <div class="hint" id="confirm-hint"></div>
+    </section>
+
+    <!-- Results -->
+    <section id="result-screen" class="hidden result-center">
+      <h1>Review complete</h1>
+      <div class="ring-wrap">
+        <div class="ring" id="score-ring">
+          <div class="ring-inner">
+            <span class="pct" id="final-pct">0%</span>
+            <span class="lbl">score</span>
+          </div>
+        </div>
+      </div>
+      <div class="final">You got <strong id="final-score">0 / 0</strong></div>
+      <h2 id="grade"></h2>
+      <div class="msg" id="grade-msg"></div>
+      <div class="result-actions">
+        <button class="btn btn-ghost hidden" id="review-btn">Review mistakes</button>
+        <button class="btn" id="retry-btn">Try again ↻</button>
+      </div>
+    </section>
+
+    <!-- Review mistakes -->
+    <section id="review-screen" class="hidden">
+      <h1>What you missed</h1>
+      <p class="intro" id="review-intro"></p>
+      <div id="review-list"></div>
+      <div class="result-actions">
+        <button class="btn btn-ghost" id="review-back-btn">← Back to results</button>
+        <button class="btn" id="review-retry-btn">Try again ↻</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="review-1.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
