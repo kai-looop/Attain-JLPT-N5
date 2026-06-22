@@ -92,6 +92,9 @@
     }
     .btn:hover { opacity: .92; }
     .btn:active { transform: translateY(1px); }
+    .btn:disabled { opacity: .4; filter: grayscale(.5); cursor: not-allowed; }
+    .btn:disabled:hover { opacity: .4; }
+    .btn:disabled:active { transform: none; }
     a.btn { display: inline-block; text-align: center; text-decoration: none; }
     .btn-ghost {
       background: transparent;

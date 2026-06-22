@@ -114,6 +114,8 @@ function renderQuestion() {
     // focus after the screen paints
     setTimeout(() => input.focus(), 0);
   }
+
+  updateConfirmState();
 }
 
 // MCQ pick (re-pickable; purely visual until confirm).
@@ -122,6 +124,12 @@ function selectOption(btn, opt) {
   Array.from(el("options").children).forEach((b) =>
     b.classList.toggle("selected", b === btn)
   );
+  updateConfirmState();
+}
+
+// Grey out / disable Confirm until there's something to confirm.
+function updateConfirmState() {
+  el("confirm-btn").disabled = !hasAnswer();
 }
 
 // Is this short answer acceptable?
@@ -277,6 +285,9 @@ document.addEventListener("DOMContentLoaded", () => {
   el("review-btn").onclick = showReview;
   el("review-back-btn").onclick = backToResults;
   el("review-retry-btn").onclick = start;
+
+  // Live-enable Confirm as the learner types a short answer.
+  el("short-input").addEventListener("input", updateConfirmState);
 
   // Enter = Confirm & Next while a question is showing.
   document.addEventListener("keydown", (e) => {

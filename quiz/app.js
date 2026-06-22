@@ -196,6 +196,7 @@ function start() {
 
 function renderQuestion() {
   selected = null;
+  el("confirm-btn").disabled = true; // nothing picked yet
   const q = quiz[current];
 
   el("progress-text").textContent = `Question ${current + 1} of ${quiz.length}`;
@@ -225,6 +226,7 @@ function select(btn, opt) {
   Array.from(el("options").children).forEach((b) =>
     b.classList.toggle("selected", b === btn)
   );
+  el("confirm-btn").disabled = false;
 }
 
 // Grade the current question silently and move on. No right/wrong is shown.
