@@ -248,7 +248,16 @@ function settle(forceSkip) {
   else showResults();
 }
 
-function confirmAndNext() { settle(false); }
+// Confirm advances only when an option is actually selected; otherwise it's a
+// no-op so a stray double-click can't skip a question. Use "I don't know" to
+// deliberately skip.
+function confirmAndNext() {
+  if (selected === null) {
+    el("confirm-hint").textContent = "Select an answer first — or tap “I don't know”.";
+    return;
+  }
+  settle(false);
+}
 function dontKnow() { settle(true); }
 
 function showResults() {

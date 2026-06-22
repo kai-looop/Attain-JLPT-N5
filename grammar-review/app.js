@@ -163,7 +163,25 @@ function settle(forceSkip) {
   else showResults();
 }
 
-function confirmAndNext() { settle(false); }
+// Confirm only advances when there's actually an answer. With nothing picked
+// (MCQ) or an empty box (short), it's a no-op — so a stray double-click can't
+// skip a question you knew. Use "I don't know" to deliberately skip.
+function hasAnswer() {
+  const q = quiz[current];
+  if (q.type === "mcq") return selected != null;
+  return el("short-input").value.trim() !== "";
+}
+
+function confirmAndNext() {
+  if (!hasAnswer()) {
+    el("confirm-hint").textContent =
+      quiz[current].type === "mcq"
+        ? "Pick an answer first — or tap “I don't know”."
+        : "Type an answer first — or tap “I don't know”.";
+    return;
+  }
+  settle(false);
+}
 function dontKnow() { settle(true); }
 
 function showResults() {

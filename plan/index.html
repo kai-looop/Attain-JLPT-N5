@@ -6,13 +6,18 @@
 <title>N5 Study Plan — Today</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- JP type: JLPT exam booklets use Rodin (Fontworks, gothic) — commercial, so
+     not web-embeddable. Real Rodin renders if installed locally; else Zen Kaku
+     Gothic New (closest free gothic), then Noto Sans JP. -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --ai:#1b2a4a;--ai-deep:#0f1c33;--washi:#f7f3e9;--washi-edge:#ece4d2;
     --shu:#c8442e;--shu-soft:#e8b9ad;--sumi:#23211c;--muted:#6f6a5e;
     --gold:#b08d3f;--line:#d8cfba;
-    --jp:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+    /* JLPT exam gothic: real Rodin (Fontworks) if installed locally, else the
+       closest free gothic (Zen Kaku Gothic New), then Noto / system Gothic. */
+    --jp:"FOT-Rodin ProN","FOT-RodinProN","New Rodin","Rodin Pro","Rodin","ロダン","Zen Kaku Gothic New","Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
     --sans:"Helvetica Neue",Arial,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
