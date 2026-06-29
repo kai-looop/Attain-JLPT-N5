@@ -98,18 +98,22 @@ function buildQuiz() {
 
   WORDS.forEach((word) => {
     // MEANING — flip between recognising the meaning and producing the Japanese.
+    // With kanji excluded, show the kana reading rather than the kanji face so
+    // no kanji surfaces anywhere in the quiz.
+    const face = (w) => (noKanji ? w.kana : jpFace(w));
     if (coin()) {
       questions.push(
-        makeQuestion(word, jpFace(word), "What does this mean?", word.en, (w) => w.en)
+        makeQuestion(word, face(word), "What does this mean?", word.en, (w) => w.en)
       );
     } else {
       questions.push(
-        makeQuestion(word, word.en, "Which is this in Japanese?", jpFace(word), (w) => jpFace(w))
+        makeQuestion(word, word.en, "Which is this in Japanese?", face(word), (w) => face(w))
       );
     }
 
     // READING — only for kanji words; flip between reading and recognising it.
-    if (hasKanji(word)) {
+    // Skipped entirely when the learner opts out of kanji tests.
+    if (!noKanji && hasKanji(word)) {
       if (coin()) {
         questions.push(
           makeQuestion(word, word.kanji, "How is this read?", word.kana, (w) => w.kana)
@@ -136,6 +140,7 @@ let selected = null;
 // end-of-quiz review. Each: { prompt, sub, correct, chosen, type }.
 let missed = [];
 let timed = false;         // timed mode chosen on the start screen
+let noKanji = false;       // exclude kanji reading tests, chosen on the start screen
 let timerId = null;        // active per-question countdown interval
 
 /* ---------- DOM ---------- */
@@ -174,6 +179,7 @@ function start() {
   // Load the lesson the learner picked.
   const key = el("lesson-select").value;
   timed = el("timer-toggle").checked;
+  noKanji = el("no-kanji-toggle").checked;
 
   const lesson = LESSONS[key];
   WORDS = lesson.words;
